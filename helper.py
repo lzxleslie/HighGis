@@ -20,8 +20,12 @@ def httpRequestPost(data):
     response_stream = urllib2.urlopen(req)
     res = response_stream.read() 
     return res
-def addJsonVectorLayer(data_source,layer_name,iface):
-    return iface.addVectorLayer(data_source,layer_name,"ogr")
+def addVectorLayer(Data_Source,iface):
+    return iface.addVectorLayer(Data_Source, "lzx", "ogr")
+def JsonVectorLayer(data_source,layer_name):
+    return QgsVectorLayer(data_source,layer_name,"ogr")
+def Json2Shp(layer,filename):
+    qgis.core.QgsVectorFileWriter.writeAsVectorFormat(layer, filename, "CP1250", None, "ESRI Shapefile")
 def get_vector_layers(iface):
     """Returns all the opened vector layers"""
     layers = iface.legendInterface().layers()

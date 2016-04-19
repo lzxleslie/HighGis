@@ -202,9 +202,13 @@ class hgis:
     def btn2_clicked(self):
         url = self.dlg.Data_Source.text()
         helper.saveHttpData(url, self.tmp_folder_path+"lzx.json")
-        layer = helper.addJsonVectorLayer(self.tmp_folder_path+"lzx.json","lzx",self.iface)
+        layer = helper.JsonVectorLayer(self.tmp_folder_path+"lzx.json","lzx")
         if not layer:
             QMessageBox.about(self.dlg,"Error","Layer is invalid") 
+        helper.Json2Shp(layer, self.tmp_folder_path+"lzx.shp")
+        layer1= helper.addVectorLayer(self.tmp_folder_path+"lzx.shp", self.iface)
+        if not layer:
+            QMessageBox.about(self.dlg,"Error","Layer is invalid")         
         self.dlg.close()
     def btn1_clicked(self):
         self.dlg.close()
@@ -235,7 +239,7 @@ class hgis:
         if layer_id in self.layer_to_export_list_item:
             return self.layer_to_export_list_item[layer_id].isSelected()
         else:
-            self.display_error_message('No layer with id ' + layer_id)
+            QMessageBox.about(self.dlg,"Error",'No layer with id ' + layer_id)
             return False  
     def select_layer(self, layer):
         """Set a layer as selected in the selection list (UI) for export.
