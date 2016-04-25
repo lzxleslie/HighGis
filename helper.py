@@ -20,7 +20,7 @@ def httpRequestPost(data):
     response_stream = urllib2.urlopen(req)
     res = response_stream.read() 
     return res
-def addVectorLayer(Data_Source,iface):
+def addVectorLayer(dlg,Data_Source,iface):
     return iface.addVectorLayer(Data_Source, "lzx", "ogr")
 def JsonVectorLayer(data_source,layer_name):
     return QgsVectorLayer(data_source,layer_name,"ogr")

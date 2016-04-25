@@ -32,6 +32,7 @@ import os.path
 import helper
 import json
 import qgis.core
+import uuid
 class hgis:
     """QGIS Plugin Implementation."""
 
@@ -193,27 +194,35 @@ class hgis:
         """Run method that performs all the real work"""
         # show the dialog
         self.dlg.show()
+        self.dlg.tabWidget.tabid = 0;
         # Run the dialog event loop 
-        self.dlg.pushButton1.clicked.connect(self.btn1_clicked)
-        self.dlg.pushButton3.clicked.connect(self.btn1_clicked)
-        self.dlg.pushButton2.clicked.connect(self.btn2_clicked)
-        self.dlg.pushButton4.clicked.connect(self.btn4_clicked)
+        self.dlg.pushButton.clicked.connect(self.clear_tmp_folder)
         self.dlg.refreshLayers.clicked.connect(self.refreshbtn_clicked)
-    def btn2_clicked(self):
+        self.dlg.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"),self.currenttab)
+        result = self.dlg.exec_()
+        # See if OK was pressed
+        if result:
+            # Do something useful here - delete the line containing pass and
+            # substitute with your code.
+            if self.dlg.tabWidget.tabid==0:
+                self.btndownload_clicked()
+            if self.dlg.tabWidget.tabid==1:
+                self.json_file_generation()
+            pass
+    
+    def currenttab(self,tabid):
+        self.dlg.tabWidget.tabid=tabid;
+    def btndownload_clicked(self):
         url = self.dlg.Data_Source.text()
-        helper.saveHttpData(url, self.tmp_folder_path+"lzx.json")
-        layer = helper.JsonVectorLayer(self.tmp_folder_path+"lzx.json","lzx")
+        filename_unique = str(uuid.uuid1())
+        helper.saveHttpData(url, self.tmp_folder_path+filename_unique+".json")
+        layer = helper.JsonVectorLayer(self.tmp_folder_path+filename_unique+".json","lzx")
         if not layer:
             QMessageBox.about(self.dlg,"Error","Layer is invalid") 
-        helper.Json2Shp(layer, self.tmp_folder_path+"lzx.shp")
-        layer1= helper.addVectorLayer(self.tmp_folder_path+"lzx.shp", self.iface)
-        if not layer:
-            QMessageBox.about(self.dlg,"Error","Layer is invalid")         
-        self.dlg.close()
-    def btn1_clicked(self):
-        self.dlg.close()
-    def btn4_clicked(self):
-        self.json_file_generation()
+        helper.Json2Shp(layer, self.tmp_folder_path+filename_unique+".shp")
+        layer1= helper.addVectorLayer(self.dlg,self.tmp_folder_path+filename_unique+".shp", self.iface)
+        if not layer1:
+            QMessageBox.about(self.dlg,"Error","Layer is invalid") 
         self.dlg.close()
     def refreshbtn_clicked(self):
         self.dlg.vLayersListWidget.clear()
@@ -271,6 +280,7 @@ class hgis:
                 layer,
                 os.path.join(self.tmp_folder_path, layer_name),
                 'utf-8', None, 'GeoJSON')
+        QMessageBox.about(self.dlg,"UPLOAD","Upload done!") 
     def create_json_alias_file(self, layer, filename):
         """Creates the file containing the map field name and field alias for
         a given layer.
@@ -293,9 +303,9 @@ class hgis:
             for f in os.listdir(self.tmp_folder_path):
                 f_path = os.path.join(self.tmp_folder_path, f)
                 os.unlink(f_path)
-            self.display_message('Temporary dir has been cleared')
+            #self.display_message('Temporary dir has been cleared')
             return True
         except Exception as e:
-            self.display_error_message('Temporary dir has been not cleared')
+            #self.display_error_message('Temporary dir has been not cleared')
             return False
           
