@@ -33,6 +33,8 @@ import helper
 import json
 import qgis.core
 import uuid
+import mywnd
+import rectangle
 class hgis:
     """QGIS Plugin Implementation."""
 
@@ -44,7 +46,7 @@ class hgis:
             application at run time.
         :type iface: QgsInterface
         """
-        # Save reference to the QGIS interface
+        # Save reference to the QGIS interface       
         self.iface = iface
         
         self.layer_to_export_list_item = {}
@@ -75,9 +77,7 @@ class hgis:
         self.menu = self.tr(u'&hgis')
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'hgis')
-        self.toolbar.setObjectName(u'hgis')
-        
-
+        self.toolbar.setObjectName(u'hgis')       
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -193,37 +193,48 @@ class hgis:
     def run(self):
         """Run method that performs all the real work"""
         # show the dialog
-        self.dlg.show()
+        
+        layer = QgsVectorLayer("/home/xiangzhang/.qgis2/python/plugins/hgis/china/china.shp", 'lzx', 'ogr')
+        w = mywnd.MyWnd(layer,self.dlg.widget,self.dlg) 
+        #s = rectangle.RectangleMapTool(self.dlg.widget)
         self.dlg.tabWidget.tabid = 0;
         # Run the dialog event loop 
+        self.dlg.checkBox.clicked.connect(self.checked)
         self.dlg.pushButton.clicked.connect(self.clear_tmp_folder)
         self.dlg.refreshLayers.clicked.connect(self.refreshbtn_clicked)
         self.dlg.connect(self.dlg.tabWidget, SIGNAL("currentChanged(int)"),self.currenttab)
         result = self.dlg.exec_()
+       # QgsMapLayerRegistry.instance().removeMapLayer(layer)
         # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
+            #ing useful here - delete the line containing pass and
             # substitute with your code.
             if self.dlg.tabWidget.tabid==0:
                 self.btndownload_clicked()
             if self.dlg.tabWidget.tabid==1:
                 self.json_file_generation()
             pass
-    
+    def checked(self,ischecked):
+        if(ischecked):
+            self.dlg.widget.show()
+        else:
+            self.dlg.lineextent.clear()
+            self.dlg.linecenter.clear()
+            self.dlg.widget.hide()
     def currenttab(self,tabid):
         self.dlg.tabWidget.tabid=tabid;
     def btndownload_clicked(self):
         url = self.dlg.Data_Source.text()
         filename_unique = str(uuid.uuid1())
         helper.saveHttpData(url, self.tmp_folder_path+filename_unique+".json")
-        layer = helper.JsonVectorLayer(self.tmp_folder_path+filename_unique+".json","lzx")
+        layer = helper.JsonVectorLayer(self.tmp_folder_path+filename_unique+".json","tmp")
         if not layer:
             QMessageBox.about(self.dlg,"Error","Layer is invalid") 
         helper.Json2Shp(layer, self.tmp_folder_path+filename_unique+".shp")
-        layer1= helper.addVectorLayer(self.dlg,self.tmp_folder_path+filename_unique+".shp", self.iface)
+        layer1= helper.addVectorLayer(filename_unique,self.tmp_folder_path+filename_unique+".shp", self.iface)
         if not layer1:
             QMessageBox.about(self.dlg,"Error","Layer is invalid") 
-        self.dlg.close()
+        
     def refreshbtn_clicked(self):
         self.dlg.vLayersListWidget.clear()
         vector_layers = helper.get_vector_layers(self.iface)
@@ -296,7 +307,7 @@ class hgis:
         f = file(filename, 'w')
         json.dump(layer_attibutes, f)
         f.close()
-    def clear_tmp_folder(self):
+    def clear_tmp_folder(self):      
         """Removes all the file of the folder that store temporary the json
         files"""
         try:
@@ -307,5 +318,13 @@ class hgis:
             return True
         except Exception as e:
             #self.display_error_message('Temporary dir has been not cleared')
-            return False
+            return False    
+    def display_message(self, msg):
+        """Display a message in the message section of the dialog.
+        
+        Keyword arguments:
+        msg -- the message
+        """
+        self.dlg.message.append(msg)
+        qApp.processEvents()    
           
