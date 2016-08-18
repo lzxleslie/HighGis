@@ -1,9 +1,9 @@
 # HighGis
 A Qgis plugin 远程与服务器数据库打交道，获取数据到本地进行数据编辑
- hgisDialog 
-                                  A QGIS plugin 
+ 
+ hgisDialog  A QGIS plugin 
  hgis 
-                              ------------------- 
+         
          begin                : 2016-04-15 
          git sha              : $Format:%H$ 
          copyright            : (C) 2016 by lzx 
